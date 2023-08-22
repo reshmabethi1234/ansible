@@ -1,0 +1,42 @@
+
+---
+- hosts: all
+  user: root
+  tasks:
+    - name: installing git
+      yum:
+        name: git
+        state: present
+    - name: installing  maven
+      yum:
+        name: maven
+        state: present
+    - name: download tomcat
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.78/bin/apache-tomcat-9.0.78.tar.gz
+        dest: /opt
+    - name: extract
+      unarchive:
+        src: /opt/apache-tomcat-9.0.78.tar.gz
+        dest: /opt
+        remote_src: yes
+    - name: provinding permissions
+      file:
+        path: /opt/apache-tomcat-9.0.78/bin/startup.sh
+        mode: 0777
+    - name: start tomcat service
+      shell: nohup ./startup.sh
+      args:
+        chdir: /opt/apache-tomcat-9.0.78/bin
+    - name: git clone
+      git:
+        repo: 'https://github.com/reshmabethi1234/live01'
+        dest: /root/live01
+    - name: build in maven
+      shell: mvn -f /root/live01/pom.xml clean package
+    - name: permission
+      file:
+        path: /root/live01/target/
+        mode: 0777
+    - name: Download a WAR File to the Tomcat webapps directory to be deployed
+      command: cp /root/live01/target/live.war /opt/apache-tomcat-9.0.78/webapps/test.war
